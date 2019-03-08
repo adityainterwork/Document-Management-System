@@ -1,0 +1,14 @@
+<div class="container mt-4">
+  <div class="form-group">
+    <label for="file">Choose File</label>
+    <input type="file" id="file" name="file" ng2FileSelect [uploader]="uploader">
+    <button type="button" class="btn btn-success btn-s" (click)="uploader.uploadAll()" [disabled]="!uploader.getNotUploadedItems().length">
+      Upload File
+    </button>
+
+
+  </div>
+  <h3>Upload queue</h3>
+  <p>Queue length: {{ uploader?.queue?.length }}</p>
+  
+</div>
