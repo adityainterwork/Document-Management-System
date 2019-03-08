@@ -20,6 +20,9 @@ package main
 import (
 	"fmt"
 	"strconv"
+	
+	"bytes"
+	"encoding/json"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -88,6 +91,14 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.move(stub, args)
 	}
 
+
+	if function =="upload" {
+		return t.upload(stub, args)
+	}
+
+	if function =="queryDocumentByOwner" {
+		return t.queryDocumentByOwner(stub, args)
+	}
 	logger.Errorf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0])
 	return shim.Error(fmt.Sprintf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0]))
 }
@@ -193,6 +204,107 @@ func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string)
 	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
 	logger.Infof("Query Response:%s\n", jsonResp)
 	return shim.Success(Avalbytes)
+}
+
+type Document struct{
+	ObjectType string `json:"docType"` //docType is used to distinguish the various types of objects in state database
+	FileName       string `json:"filename"`    //the fieldtags are needed to keep case from bouncing around
+	Timestamp      string `json:"timestamp"`
+	Author       string    `json:"author"`
+	Hash      string `json:"hash"`
+	Mimetype      string `json:"mimetype"`
+	Path      string `json:"path"`
+	
+}
+
+
+func (t *SimpleChaincode) upload(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 6 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	filename :=args[0]
+	timestamp :=args[1]
+	author :=args[2]
+	hash :=args[3]
+	mimetype :=args[4]
+	path :=args[5]
+
+
+	objectType := "document"
+	document := &Document{objectType, filename, timestamp, author, hash,mimetype,path}
+	documentJSONasBytes, err := json.Marshal(document)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	err = stub.PutState(timestamp, documentJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	
+	return shim.Success(nil)
+}
+
+func (t *SimpleChaincode) queryDocumentByOwner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	
+	if len(args) < 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	//author := strings.ToLower(args[0])
+	author :="document"
+	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"%s\"}}", author)
+
+	queryResults, err := getQueryResultForQueryString(stub, queryString)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	return shim.Success(queryResults)
+}
+
+
+func getQueryResultForQueryString(stub shim.ChaincodeStubInterface, queryString string) ([]byte, error) {
+
+	fmt.Printf("- getQueryResultForQueryString queryString:\n%s\n", queryString)
+
+	resultsIterator, err := stub.GetQueryResult(queryString)
+	if err != nil {
+		return nil, err
+	}
+	defer resultsIterator.Close()
+
+	// buffer is a JSON array containing QueryRecords
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+
+	bArrayMemberAlreadyWritten := false
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return nil, err
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString("{\"Key\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(queryResponse.Key)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Record\":")
+		// Record is a JSON object, so we write as-is
+		buffer.WriteString(string(queryResponse.Value))
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	}
+	buffer.WriteString("]")
+
+	fmt.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
+
+	return buffer.Bytes(), nil
 }
 
 func main() {

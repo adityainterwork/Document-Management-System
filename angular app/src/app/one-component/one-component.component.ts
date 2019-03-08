@@ -11,7 +11,7 @@ import {
 const URL = 'http://localhost:4000/api/upload';
 
 
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTIwNjM4NzgsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Ik9yZzEiLCJpYXQiOjE1NTIwMjc4Nzh9.BLAY4R2eHcHpqB8tlGBpaQnBAT1jVp6u93mvpbu30Q0'
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTIwNzc4OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Ik9yZzEiLCJpYXQiOjE1NTIwNDE4OTF9.ix-hiM6j7l6TuAL5B3JaZnh8HFN6YDFwpd6z9QsQfYk'
 
 
 @Component({
