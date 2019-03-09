@@ -10,7 +10,8 @@ import { FileSelectDirective } from 'ng2-file-upload';
 import { FormsModule } from '@angular/forms';
 import { from } from 'rxjs';
 import {HttpClientModule} from '@angular/common/http';
-import { NavBarComponent } from './nav-bar/nav-bar.component'
+import { NavBarComponent } from './nav-bar/nav-bar.component';
+import { RegisterComponent } from './register/register.component'
 @NgModule({
   declarations: [
     AppComponent,
@@ -18,7 +19,8 @@ import { NavBarComponent } from './nav-bar/nav-bar.component'
     TwoComponentComponent,
     LoginComponent,
     FileSelectDirective,
-    NavBarComponent
+    NavBarComponent,
+    RegisterComponent
   ],
   imports: [
     BrowserModule,

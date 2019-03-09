@@ -423,6 +423,7 @@ app.get('/channels', async function (req, res) {
 var ext
 var path = require('path')
 var fs = require('fs')
+
 let storage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		var dir = 'uploads/' + file.originalname;
@@ -430,6 +431,18 @@ let storage = multer.diskStorage({
 
 		if (!fs.existsSync(dir)) {
 			fs.mkdirSync(dir)
+			mkdirp(dir + '/.version', function (err) {
+				if (err) console.error(err)
+				else {
+					console.log('pow!')
+					fs.writeFile(dir + '/.version/'+'latestVersion.json', "", (err) => {
+						if (!err) {
+							console.log('done');
+						}
+					});
+
+			}
+			});
 		}
 		cb(null, dir);
 	},
@@ -442,6 +455,8 @@ let upload = multer({
 });
 var Request = require('request')
 var h
+var mkdirp = require('mkdirp');
+
 var localStorage = require('localStorage')
 const md5File = require('md5-file/promise')
 app.post('/api/upload', upload.single('file'), function (req, res) {
@@ -452,12 +467,12 @@ app.post('/api/upload', upload.single('file'), function (req, res) {
 		});
 
 	} else {
-	
-		hashfile(req);
 
+		hashfile(req)
 	}
 });
 const notifier = require('node-notifier');
+
 function hashfile(req) {
 	md5File(req.file.path).then(hashres => {
 		console.log(`The hash is: ${hashres}`)
@@ -466,9 +481,8 @@ function hashfile(req) {
 	})
 }
 
-
 function callingCC(req, hash) {
-	var uploadedby = "aditya"
+	var uploadedby = req.username
 	var timestamp = Date.now().toString()
 
 	Request.post({
@@ -494,13 +508,21 @@ function callingCC(req, hash) {
 				sound: true
 			});
 		}
+		if (response){
+			console.log(` respone from request ${response}`)
+			notifier.notify({
+				title: 'Sucessful',
+				//message: x.message,
+				sound: true
+			});
+		}
 		if (error) {
 			console.log(`Error:${error}`);
 		}
-		});
+	});
 }
 
-app.get('/api/alldocuments',(req,res)=>{
+app.get('/api/alldocuments', (req, res) => {
 
 
 	console.log("re")
