@@ -2,10 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 
-const  token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTIwNzc4OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Ik9yZzEiLCJpYXQiOjE1NTIwNDE4OTF9.ix-hiM6j7l6TuAL5B3JaZnh8HFN6YDFwpd6z9QsQfYk"
-const URL = 'http://localhost:4000/api/alldocuments';
-
-
+let headers: HttpHeaders = new HttpHeaders();
+headers = headers.append('authorization','Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTI0MDEzNDAsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Ik9yZzEiLCJpYXQiOjE1NTIzNjUzNDB9.CeXuTYYTFVMawZlJVbEUi2yinffxRnrNwXSmzhzC4MA')
+headers=headers.append('Content-Type','application/json');
 @Component({
   selector: 'app-two-component',
   templateUrl: './two-component.component.html',
@@ -13,8 +12,10 @@ const URL = 'http://localhost:4000/api/alldocuments';
 })
 export class TwoComponentComponent implements OnInit {
 
-data=
-  {
+
+  documents:any;
+
+data= {
     "peers": ["peer0.org1.example.com","peer0.org2.example.com"],
     "fcn":"queryDocumentByOwner",
     "args":["Aditya"]
@@ -26,14 +27,17 @@ data=
   }
 
   callServer() {
-    // const headers = new HttpHeaders()
-    //       .set('Authorization', "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTIwNzc4OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Ik9yZzEiLCJpYXQiOjE1NTIwNDE4OTF9.ix-hiM6j7l6TuAL5B3JaZnh8HFN6YDFwpd6z9QsQfYk")
-    //       .set('Content-Type', 'application/json');
+    let request = this.http.post( 'http://localhost:4000/api/alldocuments', this.data, {
+      headers: headers
+   });
+   request.subscribe(data=>{
+    this.documents=data
+    console.log(data);
+   },error=>{
 
-    this.http.get(URL)
-    .subscribe(data => {
-      console.log(data);
-    });
+    console.log(`error in req ${error}`)
+   });
+    
   }
 
 }

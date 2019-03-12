@@ -1,8 +1,24 @@
-<p>
+<table class="table table-dark">
+    <thead>
+        <tr>
+          <th>Author</th>
+          <th>File Type</th>
+          <th>File Name</th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody>
+<tr *ngFor="let document of documents" >
 
-  list will be here
+  <td>{{document.Record.author}}</td>
+  <td>{{document.Record.mimetype}}</td>
+  <td>{{document.Record.filename}}</td>
+  <td><a target="_self" href="home/aditya/Videos/Document-Management/Document-Management-System/{{document.Record.path}}" download="{{document.Record.filename}}"> download</a></td>
+</tr>
 
-  
-</p>
 
-<button (click)="callServer()">click</button>
+      </tbody>
+
+
+  </table>
+

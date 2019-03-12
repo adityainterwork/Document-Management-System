@@ -38,4 +38,8 @@ export class AuthenticationService {
         localStorage.removeItem('currentUser');
         this.currentUserSubject.next(null);
     }
+register(username: string, password: string){
+    return this.http.post<any>('http://localhost:4000/user/create',{ username, password })
+}
+
 }

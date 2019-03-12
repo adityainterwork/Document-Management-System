@@ -435,13 +435,13 @@ let storage = multer.diskStorage({
 				if (err) console.error(err)
 				else {
 					console.log('pow!')
-					fs.writeFile(dir + '/.version/'+'latestVersion.json', "", (err) => {
+					fs.writeFile(dir + '/.version/' + 'latestVersion.json', "", (err) => {
 						if (!err) {
 							console.log('done');
 						}
 					});
 
-			}
+				}
 			});
 		}
 		cb(null, dir);
@@ -480,6 +480,7 @@ function hashfile(req) {
 		callingCC(req, h);
 	})
 }
+var growl = require('growl')
 
 function callingCC(req, hash) {
 	var uploadedby = req.username
@@ -499,22 +500,15 @@ function callingCC(req, hash) {
 		})
 	}, (error, response, body) => {
 		if (body) {
+
+			console.log(` body from request ${body}`)
 			var body_ = JSON.stringify(body, null, 4);
 			var x = JSON.parse(body_)
-			console.log(x)
-			notifier.notify({
-				title: 'Sucessful',
-				message: x.message,
-				sound: true
-			});
+			growl(x)
 		}
-		if (response){
+		if (response) {
 			console.log(` respone from request ${response}`)
-			notifier.notify({
-				title: 'Sucessful',
-				//message: x.message,
-				sound: true
-			});
+
 		}
 		if (error) {
 			console.log(`Error:${error}`);
@@ -522,8 +516,40 @@ function callingCC(req, hash) {
 	});
 }
 
-app.get('/api/alldocuments', (req, res) => {
+app.post('/api/alldocuments', async (req, res) => {
 
+	console.log(req.body)
 
-	console.log("re")
+	Request.post({
+		"headers": {
+			"authorization": req.headers.authorization,
+			"content-type": "application/json"
+		},
+		//json: true,
+		"url": "http://localhost:4000/channels/mychannel/chaincodes/mycc",
+		"body": JSON.stringify({
+			"peers": ["peer0.org1.example.com", "peer0.org2.example.com"],
+			"fcn": "queryDocumentByOwner",
+			"args": ["aditya"]
+		})
+	}, (error, response, body) => {
+		if (body) {
+
+			console.log(` body from request ${body}`)
+			var body_ = JSON.stringify(body, null, 4);
+			var x = JSON.parse(body_)
+			growl(x)
+			var p = JSON.parse(x);
+			res.send(p.data)
+
+		}
+		if (response) {
+			console.log(` respone from request ${response}`)
+
+		}
+		if (error) {
+			console.log(`Error:${error}`);
+		}
+	});
+
 })

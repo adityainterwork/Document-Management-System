@@ -18,18 +18,19 @@ const util = require('util');
 const helper = require('./helper.js');
 const logger = helper.getLogger('invoke-chaincode');
 
-const invokeChaincode = async function(peerNames, channelName, chaincodeName, fcn, args, username, org_name) {
+const invokeChaincode = async function (peerNames, channelName, chaincodeName, fcn, args, username, org_name) {
 	logger.debug(util.format('\n============ invoke transaction on channel %s ============\n', channelName));
 	let error_message = null;
 	let tx_id_string = null;
 	let client = null;
 	let channel = null;
+	var data;
 	try {
 		// first setup the client for this org
 		client = await helper.getClientForOrg(org_name, username);
 		logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
 		channel = client.getChannel(channelName);
-		if(!channel) {
+		if (!channel) {
 			let message = util.format('Channel %s was not defined in the connection profile', channelName);
 			logger.error(message);
 			throw new Error(message);
@@ -79,6 +80,9 @@ const invokeChaincode = async function(peerNames, channelName, chaincodeName, fc
 				proposalResponses[0].response.status, proposalResponses[0].response.message,
 				proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 
+
+
+			data = proposalResponses[0].response.payload;
 			// wait for the channel-based event hub to tell us
 			// that the commit was good or bad on each peer in our organization
 			const promises = [];
@@ -92,29 +96,32 @@ const invokeChaincode = async function(peerNames, channelName, chaincodeName, fc
 						eh.disconnect();
 					}, 3000);
 					eh.registerTxEvent(tx_id_string, (tx, code, block_num) => {
-						logger.info('The chaincode invoke chaincode transaction has been committed on peer %s',eh.getPeerAddr());
-						logger.info('Transaction %s has status of %s in blocl %s', tx, code, block_num);
-						clearTimeout(event_timeout);
+							logger.info('The chaincode invoke chaincode transaction has been committed on peer %s', eh.getPeerAddr());
+							logger.info('Transaction %s has status of %s in blocl %s', tx, code, block_num);
+							clearTimeout(event_timeout);
 
-						if (code !== 'VALID') {
-							let message = util.format('The invoke chaincode transaction was invalid, code:%s',code);
-							logger.error(message);
-							reject(new Error(message));
-						} else {
-							let message = 'The invoke chaincode transaction was valid.';
-							logger.info(message);
-							resolve(message);
-						}
-					}, (err) => {
-						clearTimeout(event_timeout);
-						logger.error(err);
-						reject(err);
-					},
+							if (code !== 'VALID') {
+								let message = util.format('The invoke chaincode transaction was invalid, code:%s', code);
+								logger.error(message);
+								reject(new Error(message));
+							} else {
+								let message = 'The invoke chaincode transaction was valid.';
+								logger.info(message);
+								resolve(message);
+							}
+						}, (err) => {
+							clearTimeout(event_timeout);
+							logger.error(err);
+							reject(err);
+						},
 						// the default for 'unregister' is true for transaction listeners
 						// so no real need to set here, however for 'disconnect'
 						// the default is false as most event hubs are long running
 						// in this use case we are using it only once
-						{unregister: true, disconnect: true}
+						{
+							unregister: true,
+							disconnect: true
+						}
 					);
 					eh.connect();
 				});
@@ -136,19 +143,19 @@ const invokeChaincode = async function(peerNames, channelName, chaincodeName, fc
 			if (response.status === 'SUCCESS') {
 				logger.info('Successfully sent transaction to the orderer.');
 			} else {
-				error_message = util.format('Failed to order the transaction. Error code: %s',response.status);
+				error_message = util.format('Failed to order the transaction. Error code: %s', response.status);
 				logger.debug(error_message);
 			}
 
 			// now see what each of the event hubs reported
-			for(let i in results) {
+			for (let i in results) {
 				let event_hub_result = results[i];
 				let event_hub = event_hubs[i];
-				logger.debug('Event results for event hub :%s',event_hub.getPeerAddr());
-				if(typeof event_hub_result === 'string') {
+				logger.debug('Event results for event hub :%s', event_hub.getPeerAddr());
+				if (typeof event_hub_result === 'string') {
 					logger.debug(event_hub_result);
 				} else {
-					if(!error_message) error_message = event_hub_result.toString();
+					if (!error_message) error_message = event_hub_result.toString();
 					logger.debug(event_hub_result.toString());
 				}
 			}
@@ -167,18 +174,35 @@ const invokeChaincode = async function(peerNames, channelName, chaincodeName, fc
 		'Successfully invoked the chaincode %s to the channel \'%s\' for transaction ID: %s',
 		org_name, channelName, tx_id_string);
 	if (error_message) {
-		message = util.format('Failed to invoke chaincode. cause:%s',error_message);
+		message = util.format('Failed to invoke chaincode. cause:%s', error_message);
 		success = false;
 		logger.error(message);
 	} else {
 		logger.info(message);
 	}
+	
 
+	console.log(`data received is ${data}`)
 	// build a response to send back to the REST caller
-	const response = {
-		success: success,
-		message: message
-	};
+
+
+	var response;
+	if (fcn === "queryDocumentByOwner")
+	{
+		let data_ = JSON.parse(data);
+		response = {
+			success: success,
+			message: message,
+			data: data_
+		};
+	} else {
+		response = {
+			success: success,
+			message: message,
+		};
+	}
+
+
 	return response;
 };
 
