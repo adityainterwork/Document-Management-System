@@ -13,9 +13,8 @@
       <td>{{document.Record.author}}</td>
       <td>{{document.Record.filename}}</td>
       <td>{{document.Record.mimetype}}</td>
-
-      <td><a class="btn btn-info" target="_self" href="home/aditya/Videos/Document-Management/Document-Management-System/{{document.Record.path}}"
-          download="{{document.Record.filename}}"> Download</a></td>
+      <td>{{document.Key}}</td>
+      <td><button class="btn btn-info" (click)="downloadFile(document.Key)"> Download file</button></td>
     </tr>
   </tbody>
 </table>

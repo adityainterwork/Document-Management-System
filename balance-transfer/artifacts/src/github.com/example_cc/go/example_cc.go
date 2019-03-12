@@ -99,6 +99,10 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	if function =="queryDocumentByOwner" {
 		return t.queryDocumentByOwner(stub, args)
 	}
+
+	if function =="downloadDocument"{
+		return t.downloadDocument(stub, args)
+	}
 	logger.Errorf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0])
 	return shim.Error(fmt.Sprintf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0]))
 }
@@ -214,12 +218,14 @@ type Document struct{
 	Hash      string `json:"hash"`
 	Mimetype      string `json:"mimetype"`
 	Path      string `json:"path"`
+	OrginalName      string `json:"orginalname"`
+	Version      string `json:"version"`
 	
 }
 
 
 func (t *SimpleChaincode) upload(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 6 {
+	if len(args) != 8 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
@@ -229,10 +235,11 @@ func (t *SimpleChaincode) upload(stub shim.ChaincodeStubInterface, args []string
 	hash :=args[3]
 	mimetype :=args[4]
 	path :=args[5]
-
+	fileoriginalname :=args[6]
+	version :=args[7]
 
 	objectType := "document"
-	document := &Document{objectType, filename, timestamp, author, hash,mimetype,path}
+	document := &Document{objectType, filename, timestamp, author, hash,mimetype,path,fileoriginalname,version}
 	documentJSONasBytes, err := json.Marshal(document)
 	if err != nil {
 		return shim.Error(err.Error())
@@ -304,7 +311,23 @@ func getQueryResultForQueryString(stub shim.ChaincodeStubInterface, queryString 
 
 	fmt.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
 
+	logger.Infof("data is %s",buffer.String())
 	return buffer.Bytes(), nil
+}
+
+func (t * SimpleChaincode) downloadDocument(stub shim.ChaincodeStubInterface, args []string) pb.Response{
+	if len(args) !=1 {
+		return shim.Error("expecting one argument only")
+	}
+
+	Key :=args[0]
+	queryString := fmt.Sprintf("{\"selector\":{\"_id\":\"%s\"}}", Key)
+	queryResults, err := getQueryResultForQueryString(stub, queryString)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	logger.Infof("%x",queryResults)
+	return shim.Success(queryResults)
 }
 
 func main() {

@@ -483,31 +483,18 @@ function hashfile(req) {
 		h = hashres
 		var obj = req.file;
 		obj["hash"] = h;
-
 		const stats = fs.statSync('uploads/' + req.file.originalname + '/.version/' + 'latestVersion.json')
 		const fileSizeInBytes = stats.size
 		console.log(`file size ${fileSizeInBytes}`)
 		var read = fs.readFileSync('uploads/' + req.file.originalname + '/.version/' + 'latestVersion.json', 'utf8');
-	//	console.log(`read is ${read}`)
 		if (fileSizeInBytes==0) {
-
-			console.log('read is null')
 			obj["version"] = 1
 			fs.writeFileSync('uploads/' + req.file.originalname + '/.version/' + 'latestVersion.json', JSON.stringify(obj), 'utf-8');
-
-			console.log('create version 1 of file')
 		} else {
-			//console.log('create version 2 of file' , typeof read)
 			var currentVersion = JSON.parse(read)
-			console.log(`curent ${currentVersion}`)
-			console.log(`current version is ${currentVersion.version}`)
 			obj["version"] = currentVersion.version + 1
 			fs.writeFileSync('uploads/' + req.file.originalname + '/.version/' + 'latestVersion.json', JSON.stringify(obj), 'utf-8');
-
 		}
-		console.log(`The hash is: ${hashres}`)
-
-
 		callingCC(req, h);
 	})
 }
@@ -527,7 +514,18 @@ function callingCC(req, hash) {
 		"body": JSON.stringify({
 			"peers": ["peer0.org1.example.com", "peer0.org2.example.com"],
 			"fcn": "upload",
-			"args": [req.file.filename, timestamp, uploadedby, hash, req.file.mimetype, req.file.path]
+			"args": [
+				req.file.filename, 
+				timestamp, 
+				uploadedby, 
+				hash, 
+				req.file.mimetype, 
+				req.file.path,
+				req.file.originalname,
+				"1"
+			]
+
+
 		})
 	}, (error, response, body) => {
 		if (body) {
@@ -537,10 +535,7 @@ function callingCC(req, hash) {
 			var x = JSON.parse(body_)
 			growl(x)
 		}
-		if (response) {
-			console.log(` respone from request ${response}`)
-
-		}
+	
 		if (error) {
 			console.log(`Error:${error}`);
 		}
@@ -556,25 +551,68 @@ app.post('/api/alldocuments', async (req, res) => {
 			"authorization": req.headers.authorization,
 			"content-type": "application/json"
 		},
-		//json: true,
 		"url": "http://localhost:4000/channels/mychannel/chaincodes/mycc",
 		"body": JSON.stringify(req.body)
 	}, (error, response, body) => {
 		if (body) {
-
-			console.log(` body from request ${body}`)
 			var body_ = JSON.stringify(body, null, 4);
 			var x = JSON.parse(body_)
 			growl(x)
 			var p = JSON.parse(x);
 			res.send(p.data)
-
-
 		}
 
+		if (error) {
+			console.log(`Error in /api/alldocuments:${error}`);
+		}
+	});
+
+})
+
+
+app.get('/api/downloadfile',async (req,res)=>{
+
+
+	console.log(req.query.Key)
+	 downloadfile(req,res)
+})
+
+
+function downloadfile(req ,res)
+		{
+
+	Request.post({
+		"headers": {
+			"authorization": req.headers.authorization,
+			"content-type": "application/json"
+		},
+	//json: true,
+		"url": "http://localhost:4000/channels/mychannel/chaincodes/mycc",
+		"body": JSON.stringify({
+			"peers": ["peer0.org1.example.com", "peer0.org2.example.com"],
+			"fcn": "downloadDocument",
+			"args": [
+				req.query.Key
+			]
+
+
+		})
+	}, (error, response, body) => {
+		if (body) {
+
+			//console.log(` body from request ${body}`)
+			//var body_ = JSON.stringify(body, null, 4);
+		var x = JSON.parse(body)
+		var y=x["data"][0]
+		//	growl(x)
+			console.log(y.Record.path)
+			res.sendFile(path.join(__dirname)+'/'+y.Record.path)
+			
+		}
+	
 		if (error) {
 			console.log(`Error:${error}`);
 		}
 	});
 
-})
+	}
