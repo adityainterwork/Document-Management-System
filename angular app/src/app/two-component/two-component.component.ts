@@ -12,7 +12,7 @@ headers=headers.append('Content-Type','application/json');
 })
 export class TwoComponentComponent implements OnInit {
 
-
+visibility:boolean=true;
   documents:any;
 
 data= {
@@ -33,6 +33,7 @@ data= {
    request.subscribe(data=>{
     this.documents=data
     console.log(data);
+    this.visibility=false;
    },error=>{
 
     console.log(`error in req ${error}`)

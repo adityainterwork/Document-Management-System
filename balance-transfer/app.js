@@ -456,8 +456,8 @@ let upload = multer({
 var Request = require('request')
 var h
 var mkdirp = require('mkdirp');
+var util = require('util');
 
-var localStorage = require('localStorage')
 const md5File = require('md5-file/promise')
 app.post('/api/upload', upload.single('file'), function (req, res) {
 	if (!req.file) {
@@ -468,15 +468,46 @@ app.post('/api/upload', upload.single('file'), function (req, res) {
 
 	} else {
 
+		// fs.writeFile( 'uploads'+req.file.originalname+'/.version/' + 'latestVersion.json', util.inspect(req.file), (err) => {
+		// 	if (!err) {
+		// 		console.log('done');
+		// 	}
+		// });
+
 		hashfile(req)
 	}
 });
-const notifier = require('node-notifier');
 
 function hashfile(req) {
 	md5File(req.file.path).then(hashres => {
-		console.log(`The hash is: ${hashres}`)
 		h = hashres
+		var obj = req.file;
+		obj["hash"] = h;
+
+		const stats = fs.statSync('uploads/' + req.file.originalname + '/.version/' + 'latestVersion.json')
+		const fileSizeInBytes = stats.size
+		console.log(`file size ${fileSizeInBytes}`)
+		var read = fs.readFileSync('uploads/' + req.file.originalname + '/.version/' + 'latestVersion.json', 'utf8');
+	//	console.log(`read is ${read}`)
+		if (fileSizeInBytes==0) {
+
+			console.log('read is null')
+			obj["version"] = 1
+			fs.writeFileSync('uploads/' + req.file.originalname + '/.version/' + 'latestVersion.json', JSON.stringify(obj), 'utf-8');
+
+			console.log('create version 1 of file')
+		} else {
+			//console.log('create version 2 of file' , typeof read)
+			var currentVersion = JSON.parse(read)
+			console.log(`curent ${currentVersion}`)
+			console.log(`current version is ${currentVersion.version}`)
+			obj["version"] = currentVersion.version + 1
+			fs.writeFileSync('uploads/' + req.file.originalname + '/.version/' + 'latestVersion.json', JSON.stringify(obj), 'utf-8');
+
+		}
+		console.log(`The hash is: ${hashres}`)
+
+
 		callingCC(req, h);
 	})
 }
@@ -527,11 +558,7 @@ app.post('/api/alldocuments', async (req, res) => {
 		},
 		//json: true,
 		"url": "http://localhost:4000/channels/mychannel/chaincodes/mycc",
-		"body": JSON.stringify({
-			"peers": ["peer0.org1.example.com", "peer0.org2.example.com"],
-			"fcn": "queryDocumentByOwner",
-			"args": ["aditya"]
-		})
+		"body": JSON.stringify(req.body)
 	}, (error, response, body) => {
 		if (body) {
 
@@ -542,11 +569,9 @@ app.post('/api/alldocuments', async (req, res) => {
 			var p = JSON.parse(x);
 			res.send(p.data)
 
-		}
-		if (response) {
-			console.log(` respone from request ${response}`)
 
 		}
+
 		if (error) {
 			console.log(`Error:${error}`);
 		}

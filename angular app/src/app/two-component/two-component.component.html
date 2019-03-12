@@ -1,24 +1,24 @@
 <table class="table table-dark">
-    <thead>
-        <tr>
-          <th>Author</th>
-          <th>File Type</th>
-          <th>File Name</th>
-          <th>Download</th>
-        </tr>
-      </thead>
-      <tbody>
-<tr *ngFor="let document of documents" >
+  <thead>
+    <tr>
+      <th>Author</th>
+      <th>File Name</th>
+      <th>File Type</th>
+      <th>Download</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let document of documents">
 
-  <td>{{document.Record.author}}</td>
-  <td>{{document.Record.mimetype}}</td>
-  <td>{{document.Record.filename}}</td>
-  <td><a target="_self" href="home/aditya/Videos/Document-Management/Document-Management-System/{{document.Record.path}}" download="{{document.Record.filename}}"> download</a></td>
-</tr>
+      <td>{{document.Record.author}}</td>
+      <td>{{document.Record.filename}}</td>
+      <td>{{document.Record.mimetype}}</td>
 
-
-      </tbody>
-
-
-  </table>
-
+      <td><a class="btn btn-info" target="_self" href="home/aditya/Videos/Document-Management/Document-Management-System/{{document.Record.path}}"
+          download="{{document.Record.filename}}"> Download</a></td>
+    </tr>
+  </tbody>
+</table>
+<div *ngIf="visibility" class="row justify-content-center">
+  <img src="../../assets/loading.gif" alt="" srcset="">
+</div>
