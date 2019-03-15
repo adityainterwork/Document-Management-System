@@ -1,23 +1,32 @@
-<table class="table table-dark">
+<table class="table table-dark table-responsive table-hover">
   <thead>
     <tr>
       <th>Author</th>
       <th>File Name</th>
       <th>File Type</th>
+      <th>Date</th>
       <th>Download</th>
     </tr>
   </thead>
-  <tbody>
-    <tr *ngFor="let document of documents">
-
+  <tbody *ngFor="let document of documents| paginate: { itemsPerPage: 10, currentPage: p };let i = index">
+    <tr class="clickable" (click)="getAllVersion(document.Key ,i)">
       <td>{{document.Record.author}}</td>
-      <td>{{document.Record.filename}}</td>
-      <td>{{document.Record.mimetype}}</td>
       <td>{{document.Key}}</td>
-      <td><button class="btn btn-info" (click)="downloadFile(document.Key)"> Download file</button></td>
+      <td>{{document.Record.mimetype}}</td>
+      <td>{{document.Record.timestamp}}</td>
+      <td><button class="btn btn-info" (click)="fileDownload(document.Key, document.Record.mimetype)"> Download file</button></td>
     </tr>
+<p hidden="divval">
+  hi
+</p>
+
   </tbody>
+  <pagination-controls  style="float:right;" (pageChange)="p = $event" autoHide="true" responsive="true" previousLabel="Previous" nextLabel="Next"  screenReaderPageLabel="page"></pagination-controls>
 </table>
+
+
+
+
 <div *ngIf="visibility" class="row justify-content-center">
   <img src="../../assets/loading.gif" alt="" srcset="">
 </div>

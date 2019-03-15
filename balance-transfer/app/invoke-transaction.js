@@ -180,14 +180,10 @@ const invokeChaincode = async function (peerNames, channelName, chaincodeName, f
 	} else {
 		logger.info(message);
 	}
-	
 
-	console.log(`data received is ${data}`)
 	// build a response to send back to the REST caller
-
-
 	var response;
-	if (fcn === "queryDocumentByOwner" || fcn === "downloadDocument")
+	if (fcn === "queryDocumentByOwner" || fcn === "downloadDocument"|| fcn==="getHistoryForDocumnent")
 	{
 		let data_ = JSON.parse(data);
 		response = {
