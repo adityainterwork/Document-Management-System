@@ -13,6 +13,7 @@ import {HttpClientModule} from '@angular/common/http';
 import { NavBarComponent } from './nav-bar/nav-bar.component';
 import { RegisterComponent } from './register/register.component'
 import {NgxPaginationModule} from 'ngx-pagination'
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -31,6 +32,7 @@ import {NgxPaginationModule} from 'ngx-pagination'
     NgbModule,
     NgxPaginationModule,
     FormsModule
+   
   ],
   providers: [],
   bootstrap: [AppComponent]

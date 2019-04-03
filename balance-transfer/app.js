@@ -12,6 +12,10 @@ var expressJWT = require('express-jwt');
 var jwt = require('jsonwebtoken');
 var bearerToken = require('express-bearer-token');
 var cors = require('cors');
+var handlebars = require('handlebars');
+var fs = require('fs')
+const nodemailer = require("nodemailer");
+
 
 require('./config.js');
 var hfc = require('fabric-client');
@@ -42,7 +46,7 @@ app.set('secret', 'thisismysecret');
 app.use(expressJWT({
 	secret: 'thisismysecret'
 }).unless({
-	path: ['/users']
+	path: ['/users','/downloadfile']
 }));
 app.use(bearerToken());
 app.use(function (req, res, next) {
@@ -95,6 +99,7 @@ function getErrorMessage(field) {
 app.post('/users', async function (req, res) {
 	var username = req.body.username;
 	var orgName = req.body.orgName;
+	var emailId = req.body.emailId;
 	logger.debug('End point : /users');
 	logger.debug('User name : ' + username);
 	logger.debug('Org name  : ' + orgName);
@@ -116,6 +121,7 @@ app.post('/users', async function (req, res) {
 	if (response && typeof response !== 'string') {
 		logger.debug('Successfully registered the username %s for organization %s', username, orgName);
 		response.token = token;
+		sendWelcomeMail(username, orgName, emailId)
 		res.json(response);
 	} else {
 		logger.debug('Failed to register the username %s for organization %s with::%s', username, orgName, response);
@@ -418,8 +424,37 @@ app.get('/channels', async function (req, res) {
 	res.send(message);
 });
 
+var transporter = nodemailer.createTransport({
+	service: 'gmail',
+	auth: {
+		user: 'adityaprakashjoshi1@gmail.com',
+		pass: 'farcry@2014'
+	}
+});
 
-app.use('/api',require('./routes'))
+function sendWelcomeMail(username, orgName, emailId) {
 
+	var file = fs.readFileSync('main.hbs', 'utf8').toString();
+	var template = handlebars.compile(file);
+	var replacements = {
+		username: username,
+		orgName: orgName
+	};
+	var htmlToSend = template(replacements);
+	var mailOptions = {
+		from: 'adityaprakashjoshi1@gmail.com',
+		to: emailId,
+		subject: 'Sending Email using Node.js',
+		html: htmlToSend
+	};
+	transporter.sendMail(mailOptions, function (error, info) {
+		if (error) {
+			console.log(error);
+		} else {
+			console.log('Email sent: ' + info.response);
+		}
+	});
 
+}
 
+app.use('/api', require('./routes'))

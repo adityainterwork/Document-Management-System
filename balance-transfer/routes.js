@@ -1,5 +1,5 @@
-var express = require('express')
-  , app = express.Router()
+var express = require('express'),
+	app = express.Router()
 const multer = require('multer');
 var ext
 var path = require('path')
@@ -71,8 +71,8 @@ function hashfile(req) {
 				//same file is uploaded
 				fs.unlinkSync('uploads/' + req.file.originalname + '/' + req.file.filename)
 			} else {
-				currentVersion["path"]=req.file.path
-				currentVersion["filename"]=req.file.filename
+				currentVersion["path"] = req.file.path
+				currentVersion["filename"] = req.file.filename
 				currentVersion["hash"] = h;
 				currentVersion["version"] = currentVersion.version + 1
 				currentVersion["author"] = req.username;
@@ -128,7 +128,7 @@ function uploadDocument(req, hash, header) {
 	});
 }
 
-
+var allDocumentsData
 // display all the file in download list
 app.post('/alldocuments', async (req, res) => {
 
@@ -147,6 +147,7 @@ app.post('/alldocuments', async (req, res) => {
 			var x = JSON.parse(body_)
 			growl(x)
 			var p = JSON.parse(x);
+			allDocumentsData = p.data;
 			res.send(p.data)
 		}
 
@@ -160,46 +161,61 @@ app.post('/alldocuments', async (req, res) => {
 
 //invokes the chaincode and get the file path
 app.get('/downloadfile', async (req, res) => {
-	downloadfile(req, res)
+	//downloadfile(req, res)
+	downloadfileverifyhash(req, res)
 })
 
 
-function downloadfile(req, res) {
-
-	Request.post({
-		"headers": {
-			"authorization": req.headers.authorization,
-			"content-type": "application/json"
-		},
-		//json: true,
-		"url": "http://localhost:4000/channels/mychannel/chaincodes/mycc",
-		"body": JSON.stringify({
-			"peers": ["peer0.org1.example.com", "peer0.org2.example.com"],
-			"fcn": "downloadDocument",
-			"args": [
-				req.query.Key
-			]
-
-
-		})
-	}, (error, response, body) => {
-		if (body) {
-			var x = JSON.parse(body)
-			console.log(` ${Object.keys(x.data).length}`)
-
-			var y = x["data"][0]
-
-			console.log(x["data"])
-
-			console.log(y.Record.path)
-			res.sendFile(path.join(__dirname) + '/' + y.Record.path)
-
-		}
-
-		if (error) {
-			console.log(`Error:${error}`);
-		}
+function downloadfileverifyhash(req, res) {
+	var reqestedFileHash
+	md5File(req.query.path).then(hashres => {
+		console.log(hashres)
+		reqestedFileHash = hashres;
+		
+		Request.post({
+			"headers": {
+				"authorization": req.headers.authorization,
+				"content-type": "application/json"
+			},
+			//json: true,
+			"url": "http://localhost:4000/channels/mychannel/chaincodes/mycc",
+			"body": JSON.stringify({
+				"peers": ["peer0.org1.example.com", "peer0.org2.example.com"],
+				"fcn": "getHistoryForDocumnent",
+				"args": [
+					req.query.Key
+				]
+	
+	
+			})
+		}, (error, response, body) => {
+			if (body) {
+				var x = JSON.parse(body)
+				console.log(x["data"])
+				for (i=0;i<Object.keys(x.data).length;i++)
+				{
+					console.log(x["data"][i].hash)
+					if (reqestedFileHash===x["data"][i].hash ){
+						console.log(`hash matched  ${reqestedFileHash}` )
+						res.sendFile(x["data"][i].path,{ root: __dirname })
+					}
+					else {
+						
+					
+					}
+				}
+	
+			}
+	
+			if (error) {
+				console.log(`Error:${error}`);
+			}
+		});
+	
 	});
+
+	
+	
 
 }
 module.exports = app

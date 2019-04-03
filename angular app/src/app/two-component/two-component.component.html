@@ -14,11 +14,9 @@
       <td>{{document.Key}}</td>
       <td>{{document.Record.mimetype}}</td>
       <td>{{document.Record.timestamp}}</td>
-      <td><button class="btn btn-info" (click)="fileDownload(document.Key, document.Record.mimetype)"> Download file</button></td>
+      <td><button class="btn btn-info" (click)="fileDownload(document.Key, document.Record.path,document.Record.filename)"> Download file</button></td>
     </tr>
-<p hidden="divval">
-  hi
-</p>
+
 
   </tbody>
   <pagination-controls  style="float:right;" (pageChange)="p = $event" autoHide="true" responsive="true" previousLabel="Previous" nextLabel="Next"  screenReaderPageLabel="page"></pagination-controls>

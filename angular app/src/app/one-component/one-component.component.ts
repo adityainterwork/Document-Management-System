@@ -1,18 +1,8 @@
-import {
-  Component,
-  OnInit
-} from '@angular/core';
-
-import {
-  FileUploader,
-  FileSelectDirective
-} from 'ng2-file-upload/ng2-file-upload';
+import {Component, OnInit} from '@angular/core';
+import { FileUploader, FileSelectDirective} from 'ng2-file-upload/ng2-file-upload';
 
 const URL = 'http://localhost:4000/api/upload';
-
-
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTI3ODIwNzMsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Ik9yZzEiLCJpYXQiOjE1NTI3NDYwNzN9.zT6ibmBwLw7FvDMU0_MJq_QkyntsOdlpo_h4jt2PylY'
-
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTQyMjAzOTcsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Ik9yZzEiLCJpYXQiOjE1NTQxODQzOTd9.N_fwiLqi1uA208LsEOpYIE5hkKQ5l2O_yTti37DcZkM'
 
 @Component({
   selector: 'app-one-component',
@@ -33,13 +23,10 @@ export class OneComponentComponent implements OnInit {
     maxFileSize: 5 * 1024 * 1024
   });
 
-
   ngOnInit() {
     this.uploader.onBeforeUploadItem = (file) => {
-
     }
     this.uploader.onAfterAddingFile = (file) => {
-
       file.withCredentials = false;
     };
     this.uploader.onCompleteItem = (item: any, response: any, status: any, headers: any) => {

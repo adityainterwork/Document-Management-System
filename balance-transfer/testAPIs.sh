@@ -40,7 +40,8 @@ function setChaincodePath(){
 	LANGUAGE=`echo "$LANGUAGE" | tr '[:upper:]' '[:lower:]'`
 	case "$LANGUAGE" in
 		"golang")
-		CC_SRC_PATH="github.com/example_cc/go"
+		CC_SRC_PATH="github.com/main_cc/go"
+    CC_SRC_PATH_SEC="github.com/secondary_cc/go"
 		;;
 		"node")
 		CC_SRC_PATH="$PWD/artifacts/src/github.com/example_cc/node"
@@ -57,7 +58,7 @@ echo
 ORG1_TOKEN=$(curl -s -X POST \
   http://localhost:4000/users \
   -H "content-type: application/x-www-form-urlencoded" \
-  -d 'username=Jim&orgName=Org1')
+  -d 'username=Jim&orgName=Org1&emailId=aditya@interwork.biz')
 echo $ORG1_TOKEN
 ORG1_TOKEN=$(echo $ORG1_TOKEN | jq ".token" | sed "s/\"//g")
 echo
@@ -68,7 +69,7 @@ echo
 ORG2_TOKEN=$(curl -s -X POST \
   http://localhost:4000/users \
   -H "content-type: application/x-www-form-urlencoded" \
-  -d 'username=Barry&orgName=Org2')
+  -d 'username=Barry&orgName=Org2&emailId=aditya@interwork.biz')
 echo $ORG2_TOKEN
 ORG2_TOKEN=$(echo $ORG2_TOKEN | jq ".token" | sed "s/\"//g")
 echo
@@ -152,6 +153,24 @@ curl -s -X POST \
 echo
 echo
 
+# SECOND CC
+echo "POST Install chaincode on Org1"
+echo
+curl -s -X POST \
+  http://localhost:4000/chaincodes \
+  -H "authorization: Bearer $ORG1_TOKEN" \
+  -H "content-type: application/json" \
+  -d "{
+	\"peers\": [\"peer0.org1.example.com\",\"peer1.org1.example.com\"],
+	\"chaincodeName\":\"mycc2\",
+	\"chaincodePath\":\"$CC_SRC_PATH_SEC\",
+	\"chaincodeType\": \"$LANGUAGE\",
+	\"chaincodeVersion\":\"v0\"
+}"
+echo
+echo
+
+
 echo "POST Install chaincode on Org2"
 echo
 curl -s -X POST \
@@ -168,6 +187,26 @@ curl -s -X POST \
 echo
 echo
 
+# SECOND CC
+echo "POST Install chaincode on Org2"
+echo
+curl -s -X POST \
+  http://localhost:4000/chaincodes \
+  -H "authorization: Bearer $ORG2_TOKEN" \
+  -H "content-type: application/json" \
+  -d "{
+	\"peers\": [\"peer0.org2.example.com\",\"peer1.org2.example.com\"],
+	\"chaincodeName\":\"mycc2\",
+	\"chaincodePath\":\"$CC_SRC_PATH_SEC\",
+	\"chaincodeType\": \"$LANGUAGE\",
+	\"chaincodeVersion\":\"v0\"
+}"
+echo
+echo
+
+# instantiate chaincode 
+
+
 echo "POST instantiate chaincode on Org1"
 echo
 curl -s -X POST \
@@ -183,55 +222,22 @@ curl -s -X POST \
 echo
 echo
 
-# echo "POST invoke chaincode on peers of Org1 and Org2"
-# echo
-# curl -s -X POST \
-#   http://localhost:4000/channels/mychannel/chaincodes/mycc \
-#   -H "authorization: Bearer $ORG1_TOKEN" \
-#   -H "content-type: application/json" \
-#   -d "{
-# 	\"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
-# 	\"fcn\":\"move\",
-# 	\"args\":[\"a\",\"b\",\"10\"]
-# }"
-# echo
-# echo
 
-# echo "GET query ChainInfo"
-# echo
-# curl -s -X GET \
-#   "http://localhost:4000/channels/mychannel?peer=peer0.org1.example.com" \
-#   -H "authorization: Bearer $ORG1_TOKEN" \
-#   -H "content-type: application/json"
-# echo
-# echo
+echo "POST instantiate chaincode on Org1"
+echo
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/chaincodes \
+  -H "authorization: Bearer $ORG1_TOKEN" \
+  -H "content-type: application/json" \
+  -d "{
+	\"chaincodeName\":\"mycc2\",
+	\"chaincodeVersion\":\"v0\",
+	\"chaincodeType\": \"$LANGUAGE\",
+	\"args\":[\"a\",\"100\",\"b\",\"200\"]
+}"
+echo
+echo
 
-# echo "GET query Installed chaincodes"
-# echo
-# curl -s -X GET \
-#   "http://localhost:4000/chaincodes?peer=peer0.org1.example.com" \
-#   -H "authorization: Bearer $ORG1_TOKEN" \
-#   -H "content-type: application/json"
-# echo
-# echo
-
-# echo "GET query Instantiated chaincodes"
-# echo
-# curl -s -X GET \
-#   "http://localhost:4000/channels/mychannel/chaincodes?peer=peer0.org1.example.com" \
-#   -H "authorization: Bearer $ORG1_TOKEN" \
-#   -H "content-type: application/json"
-# echo
-# echo
-
-# echo "GET query Channels"
-# echo
-# curl -s -X GET \
-#   "http://localhost:4000/channels?peer=peer0.org1.example.com" \
-#   -H "authorization: Bearer $ORG1_TOKEN" \
-#   -H "content-type: application/json"
-# echo
-# echo
 
 
 echo "Total execution time : $(($(date +%s)-starttime)) secs ..."

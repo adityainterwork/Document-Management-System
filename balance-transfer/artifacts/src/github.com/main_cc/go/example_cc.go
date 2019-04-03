@@ -1,13 +1,11 @@
-
 package main
 
 import (
-	"fmt"
-	
-
 	"bytes"
 	"encoding/json"
+	"fmt"
 
+	//"github.com/hyperledger/fabric/common/util"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
@@ -27,24 +25,17 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	function, args := stub.GetFunctionAndParameters()
 
-	if function == "delete" {
-		// Deletes an entity from its state
-		return t.delete(stub, args)
-	}
-
-	if function == "query" {
-		// queries an entity state
-		return t.query(stub, args)
-	}
-	if function == "move" {
-		// Deletes an entity from its state
-		return t.move(stub, args)
-	}
-
 	if function == "getHistoryForDocumnent" {
 
-		//get all the versions of a document
-		return t.getHistoryForDocumnent(stub, args)
+		// //get all the versions of a document
+		 return t.getHistoryForDocumnent(stub, args)
+
+		// invokeArgs := util.ToChaincodeArgs("hello", args[0])
+		// response := stub.InvokeChaincode("mycc2", invokeArgs, "mychannel")
+		// if response.Status != shim.OK {
+		// 	return shim.Error(response.Message)
+		// }
+		// return shim.Success(nil)
 	}
 
 	if function == "upload" {
@@ -64,63 +55,6 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Error(fmt.Sprintf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0]))
 }
 
-func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	
-
-	// Write the state back to the ledger
-	err := stub.PutState("A", []byte("init"))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	return shim.Success(nil)
-}
-
-// Deletes an entity from state
-func (t *SimpleChaincode) delete(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting 1")
-	}
-
-	A := args[0]
-
-	// Delete the key from the state in ledger
-	err := stub.DelState(A)
-	if err != nil {
-		return shim.Error("Failed to delete state")
-	}
-
-	return shim.Success(nil)
-}
-
-// Query callback representing the query of a chaincode
-func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	var A string // Entities
-	var err error
-
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting name of the person to query")
-	}
-
-	A = args[0]
-
-	// Get the state from the ledger
-	Avalbytes, err := stub.GetState(A)
-	if err != nil {
-		jsonResp := "{\"Error\":\"Failed to get state for " + A + "\"}"
-		return shim.Error(jsonResp)
-	}
-
-	if Avalbytes == nil {
-		jsonResp := "{\"Error\":\"Nil amount for " + A + "\"}"
-		return shim.Error(jsonResp)
-	}
-
-	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
-	logger.Infof("Query Response:%s\n", jsonResp)
-	return shim.Success(Avalbytes)
-}
 
 type Document struct {
 	ObjectType  string `json:"docType"`  //docType is used to distinguish the various types of objects in state database
@@ -238,7 +172,7 @@ func (t *SimpleChaincode) downloadDocument(stub shim.ChaincodeStubInterface, arg
 }
 
 func (t *SimpleChaincode) getHistoryForDocumnent(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	
+
 	filename := args[0]
 	resultsIterator, err := stub.GetHistoryForKey(filename)
 	if err != nil {
@@ -265,6 +199,7 @@ func (t *SimpleChaincode) getHistoryForDocumnent(stub shim.ChaincodeStubInterfac
 	logger.Infof(buffer.String())
 	return shim.Success(buffer.Bytes())
 }
+
 
 func main() {
 	err := shim.Start(new(SimpleChaincode))

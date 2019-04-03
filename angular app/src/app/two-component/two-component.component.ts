@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders ,HttpParams,HttpRequest} from '@angular/common/
 import { saveAs } from 'file-saver'
 
 let headers: HttpHeaders = new HttpHeaders();
-headers = headers.append('authorization','Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTI3ODIwNzMsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Ik9yZzEiLCJpYXQiOjE1NTI3NDYwNzN9.zT6ibmBwLw7FvDMU0_MJq_QkyntsOdlpo_h4jt2PylY')
+headers = headers.append('authorization','Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTQyMjAzOTcsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Ik9yZzEiLCJpYXQiOjE1NTQxODQzOTd9.N_fwiLqi1uA208LsEOpYIE5hkKQ5l2O_yTti37DcZkM')
 headers=headers.append('Content-Type','application/json');
 @Component({
   selector: 'app-two-component',
@@ -15,7 +15,7 @@ export class TwoComponentComponent implements OnInit {
 visibility:boolean=true;
   documents:any;
 
-data= {
+  data= {
     "peers": ["peer0.org1.example.com","peer0.org2.example.com"],
     "fcn":"queryDocumentByOwner",
     "args":["Aditya"]
@@ -40,20 +40,15 @@ data= {
     
   }
 
-  fileDownload(key : string, mimeType: string){
-    let params = new HttpParams().append("Key",key)
+  fileDownload(key : string, path: string,filename:string){
+    let params = new HttpParams().append("Key",key).append("path",path)
     
   this.http.get('http://localhost:4000/api/downloadfile',{responseType: 'blob',headers:headers,params:params}).subscribe(data=>{
-      var blob = new Blob([data], { type: mimeType})
+      var blob = new Blob([data])
+     
       saveAs(blob, key);
     },error=>{
       console.log(error)
     })
-  }
-  divval:boolean=true
-  getAllVersion(key :string,index:any){
-    console.log(`clicked ${index}`)
-    
-    this.divval=false
   }
 }
